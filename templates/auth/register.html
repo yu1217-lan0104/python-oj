@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}注册 · Python 算法练习场{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="text-center mb-4">
+      <div class="brand-mark mx-auto mb-3" style="width:44px;height:44px;font-size:18px;">Py</div>
+      <h1 class="h4 fw-bold mb-1">创建账号</h1>
+      <div class="muted tiny">账号只保存在你自己的电脑上</div>
+    </div>
+    <form method="post" novalidate>
+      <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+      <div class="mb-3">
+        <label class="form-label" for="username">账号</label>
+        <input class="form-control" id="username" name="username" value="{{ username }}"
+               placeholder="3–20 位字母、数字或下划线" autocomplete="username" required autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="nickname">昵称 <span class="muted tiny">（选填）</span></label>
+        <input class="form-control" id="nickname" name="nickname" value="{{ nickname }}"
+               placeholder="显示在导航栏，留空则使用账号" autocomplete="nickname">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="password">密码</label>
+        <input class="form-control" id="password" name="password" type="password"
+               placeholder="至少 6 位" autocomplete="new-password" required>
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="confirm">确认密码</label>
+        <input class="form-control" id="confirm" name="confirm" type="password"
+               placeholder="再输入一次" autocomplete="new-password" required>
+      </div>
+      <button class="btn btn-primary w-100 py-2 rounded-3" type="submit">注册并开始刷题</button>
+    </form>
+    <div class="text-center tiny muted mt-3">
+      已经有账号了？<a href="{{ url_for('auth.login') }}">直接登录</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}提交记录 · Python 算法练习场{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+  <div>
+    <h1 class="h3 fw-bold mb-1">提交记录</h1>
+    <div class="muted tiny">
+      共 {{ pagination.total }} 条
+      {% if problem_title %} · 题目「{{ problem_title }}」<a class="tiny" href="{{ url_for('records.submissions', status=status) }}">取消题目筛选</a>{% endif %}
+    </div>
+  </div>
+  <div>
+    <a class="chip {{ 'active' if not status }}" href="{{ url_for('records.submissions', problem_id=problem_id) }}">全部结果</a>
+    {% for item in statuses %}
+    <a class="chip {{ 'active' if status == item }}"
+       href="{{ url_for('records.submissions', status=item, problem_id=problem_id) }}">{{ item }} {{ STATUS_TEXT[item] }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card-soft p-0 overflow-hidden">
+  {% if items %}
+  <div class="table-responsive">
+    <table class="table table-clean align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="ps-4">提交时间</th>
+          <th>题目</th>
+          <th>结果</th>
+          <th>测试点</th>
+          <th>用时</th>
+          <th class="text-end pe-4">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td class="ps-4 tiny muted">{{ item.created_at|dt }}</td>
+          <td>
+            <a class="fw-bold" href="{{ url_for('problems.detail', pid=item.problem_id) }}">{{ item.problem.title }}</a>
+            <span class="badge-soft badge-{{ item.problem.difficulty_class }} ms-1">{{ item.problem.difficulty }}</span>
+          </td>
+          <td><span class="badge-soft badge-{{ item.status|lower }}">{{ item.status }} · {{ item.status_text }}</span></td>
+          <td class="tiny muted">{{ item.passed }} / {{ item.total }}</td>
+          <td class="tiny muted">{{ item.time_ms }} ms</td>
+          <td class="text-end pe-4">
+            <a class="btn btn-sm btn-outline-primary rounded-3" href="{{ url_for('records.detail', sid=item.id) }}">查看</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span class="emoji">📭</span>
+    还没有符合条件的提交记录。
+    <div class="mt-3"><a class="btn btn-sm btn-primary rounded-3" href="{{ url_for('problems.index') }}">去题库做题</a></div>
+  </div>
+  {% endif %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="d-flex justify-content-center align-items-center gap-2 mt-4">
+  {% if pagination.has_prev %}
+  <a class="btn btn-sm btn-outline-secondary rounded-3" href="{{ url_for('records.submissions', page=pagination.prev_num, status=status, problem_id=problem_id) }}">上一页</a>
+  {% endif %}
+  <span class="tiny muted">第 {{ pagination.page }} / {{ pagination.pages }} 页</span>
+  {% if pagination.has_next %}
+  <a class="btn btn-sm btn-outline-secondary rounded-3" href="{{ url_for('records.submissions', page=pagination.next_num, status=status, problem_id=problem_id) }}">下一页</a>
+  {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

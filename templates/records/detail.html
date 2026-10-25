@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}提交 #{{ submission.id }} · Python 算法练习场{% endblock %}
+
+{% block content %}
+<nav class="mb-3 tiny muted">
+  <a href="{{ url_for('records.submissions') }}">提交记录</a>
+  <span class="mx-1">/</span>
+  <span>#{{ submission.id }}</span>
+</nav>
+
+<div class="verdict verdict-{{ submission.status }} mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <h2>{{ submission.status }} · {{ submission.status_text }}</h2>
+      <div class="sub">
+        <a class="text-white fw-bold" href="{{ url_for('problems.detail', pid=problem.id) }}">{{ problem.title }}</a>
+        · 测试点 {{ submission.passed }}/{{ submission.total }} · 最大用时 {{ submission.time_ms }} ms
+        · {{ submission.created_at|dt }}
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-light btn-sm rounded-3 fw-bold" href="{{ url_for('problems.detail', pid=problem.id) }}">再试一次</a>
+      <form method="post" action="{{ url_for('records.toggle_mistake', pid=problem.id) }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button class="btn btn-sm rounded-3 fw-bold {{ 'btn-outline-light' if note else 'btn-light' }}" type="submit">
+          {{ '移出错题本' if note else '加入错题本' }}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-soft p-4 mb-4">
+      <div class="section-title"><span class="dot"></span>判题信息</div>
+
+      {% if submission.status == 'AC' %}
+      <div class="result-message" style="background:var(--ok-soft);border-color:#bfe9d0;color:#065f46;">
+        {{ submission.message }}
+      </div>
+      {% else %}
+      <div class="result-message">{{ submission.message }}</div>
+      {% endif %}
+
+      {% if cases %}
+      <div class="table-responsive mt-3">
+        <table class="table table-clean case-table">
+          <thead>
+            <tr><th>#</th><th>结果</th><th>用时</th><th class="text-end">详情</th></tr>
+          </thead>
+          <tbody>
+            {% for case in cases %}
+            <tr>
+              <td class="fw-bold">{{ case.index }}</td>
+              <td><span class="badge-soft badge-{{ case.status|lower }}">{{ case.status }}</span></td>
+              <td class="tiny muted">{{ case.time_ms }} ms</td>
+              <td class="text-end">
+                {% if case.status != 'AC' %}
+                <details class="text-start">
+                  <summary class="tiny fw-bold" style="cursor:pointer;color:var(--brand);">查看对比</summary>
+                  <div class="mt-2" style="min-width:260px;">
+                    <div class="tiny fw-bold muted mb-1">输入</div>
+                    <div class="case-detail">{{ case.input }}</div>
+                    <div class="tiny fw-bold muted mt-2 mb-1">期望输出</div>
+                    <div class="case-detail">{{ case.expected }}</div>
+                    <div class="tiny fw-bold muted mt-2 mb-1">实际输出</div>
+                    <div class="case-detail">{{ case.actual if case.actual else '（没有输出）' }}</div>
+                  </div>
+                </details>
+                {% else %}
+                <span class="tiny muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      {% if submission.status == 'CE' %}
+      <div class="tiny muted mt-3">
+        语法错误意味着程序完全无法运行，先按照提示修改后再提交；点击「再试一次」可以回到题目页重新写代码。
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card-soft p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title mb-0"><span class="dot"></span>提交的代码</div>
+        <button class="btn btn-sm btn-outline-secondary rounded-3" type="button"
+                data-copy="{{ submission.code }}">复制代码</button>
+      </div>
+      <div class="code-view">
+        <ol>
+          {% for line in code_lines %}<li><span>{{ line if line else ' ' }}</span></li>{% endfor %}
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-soft p-4">
+      <div class="section-title"><span class="dot"></span>题目信息</div>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="badge-soft badge-{{ problem.difficulty_class }}">{{ problem.difficulty }}</span>
+        {% for item in problem.tag_list %}<span class="badge-soft badge-tag">{{ item }}</span>{% endfor %}
+      </div>
+      <div class="tiny muted mb-3">时间限制 {{ problem.time_limit_ms }} ms · 共 {{ problem.tests|length }} 个测试点</div>
+      <a class="btn btn-outline-primary btn-sm rounded-3 w-100" href="{{ url_for('problems.detail', pid=problem.id) }}">回到题目</a>
+
+      {% if note %}
+      <div class="mt-3">
+        <div class="tiny fw-bold muted mb-1">我的错题笔记</div>
+        <div class="pill-note">{{ note.content if note.content else '（还没有写笔记）' }}</div>
+        <a class="tiny fw-bold" href="{{ url_for('records.mistakes') }}">去错题本补充笔记 →</a>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if history %}
+    <div class="card-soft p-4 mt-4">
+      <div class="section-title"><span class="dot"></span>这道题的其它提交</div>
+      {% for item in history %}
+      <a class="list-tile text-decoration-none" href="{{ url_for('records.detail', sid=item.id) }}">
+        <span class="badge-soft badge-{{ item.status|lower }}">{{ item.status }}</span>
+        <span class="tiny muted flex-grow-1">{{ item.created_at|dt }}</span>
+        <span class="tiny muted">{{ item.passed }}/{{ item.total }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

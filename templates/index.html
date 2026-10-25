@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Python 算法练习场 · 新手刷题{% endblock %}
+
+{% block content %}
+<section class="hero mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-6">
+      <div class="hero-tags mb-3">
+        <span>Python3 专用</span><span>入门 → 基础</span><span>逐题思路提示</span><span>错题复盘</span>
+      </div>
+      <h1>把算法练成手感，<br>从第一道 Python 题开始</h1>
+      <p>
+        8 道入门 + 8 道基础，覆盖枚举、模拟、字符串、哈希、二分、递归、栈等新手必备专题。
+        每题都有循序渐进的思路提示，只给方向、不给代码，练的是自己推出来。
+      </p>
+      <div class="d-flex flex-wrap gap-2 mt-4">
+        {% if current_user.is_authenticated %}
+        <a class="btn btn-light text-primary fw-bold px-4 py-2" href="{{ url_for('problems.index') }}">继续刷题</a>
+        <a class="btn btn-ghost-light px-4 py-2" href="{{ url_for('profile.index') }}">查看我的进度</a>
+        {% else %}
+        <a class="btn btn-light text-primary fw-bold px-4 py-2" href="{{ url_for('auth.register') }}">免费注册开始</a>
+        <a class="btn btn-ghost-light px-4 py-2" href="{{ url_for('problems.index') }}">先看看题库</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="hero-code"><span class="c"># 两数之和：用哈希表把 O(n²) 降到 O(n)</span>
+<span class="k">def</span> two_sum(nums, target):
+    seen = {}
+    <span class="k">for</span> i, x <span class="k">in</span> enumerate(nums):
+        <span class="k">if</span> target - x <span class="k">in</span> seen:
+            <span class="k">return</span> seen[target - x], i
+        seen[x] = i
+
+<span class="c"># 提交后：AC / WA / TLE 一目了然</span>
+<span class="c"># 报错会翻译成：第 3 行 IndexError，下标越界</span></div>
+    </div>
+  </div>
+</section>
+
+{% if stats %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card accent">
+      <div class="label">已完成题目</div>
+      <div class="value">{{ stats.solved }} <small>/ {{ stats.total_problems }}</small></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="label">提交次数</div>
+      <div class="value">{{ stats.total_submits }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="label">通过率</div>
+      <div class="value">{{ stats.pass_rate }}<small>%</small></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="label">错题本</div>
+      <div class="value">{{ stats.mistakes }} <small>题</small></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-soft p-4 h-100">
+      <div class="section-title"><span class="dot"></span>学习路线</div>
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <div class="pill-note h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge-soft badge-easy">入门</span>
+              <span class="tiny muted">{{ easy_count }} 题</span>
+            </div>
+            <div class="fw-bold mb-1">熟悉语法与暴力思路</div>
+            <div class="tiny muted">枚举、模拟、字符串、哈希、简单递归</div>
+            <a class="btn btn-sm btn-outline-primary rounded-3 mt-3" href="{{ url_for('problems.index', difficulty='入门') }}">开始入门</a>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="pill-note h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge-soft badge-normal">基础</span>
+              <span class="tiny muted">{{ normal_count }} 题</span>
+            </div>
+            <div class="fw-bold mb-1">学会选对方法</div>
+            <div class="tiny muted">二分查找、二分答案、栈、排序、数学推导</div>
+            <a class="btn btn-sm btn-outline-primary rounded-3 mt-3" href="{{ url_for('problems.index', difficulty='基础') }}">挑战基础</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="tiny muted fw-bold mb-2">按专题练习</div>
+        {% for tag, count in tag_counts.items() %}
+        <a class="chip" href="{{ url_for('problems.index', tag=tag) }}">{{ tag }} · {{ count }}</a>
+        {% endfor %}
+      </div>
+
+      {% if current_user.is_authenticated and next_problem %}
+      <div class="d-flex align-items-center justify-content-between mt-4 p-3 rounded-3" style="background:#f7faff;border:1px solid #e3ecff;">
+        <div>
+          <div class="tiny muted fw-bold">下一题推荐</div>
+          <div class="fw-bold">{{ next_problem.title }}
+            <span class="badge-soft badge-{{ next_problem.difficulty_class }} ms-1">{{ next_problem.difficulty }}</span>
+          </div>
+        </div>
+        <a class="btn btn-primary btn-sm rounded-3" href="{{ url_for('problems.detail', pid=next_problem.id) }}">去做这题</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-soft p-4 h-100">
+      <div class="section-title"><span class="dot"></span>{% if current_user.is_authenticated %}最近提交{% else %}题库速览{% endif %}</div>
+      {% if current_user.is_authenticated %}
+        {% if recent %}
+          {% for item in recent %}
+          <a class="list-tile text-decoration-none" href="{{ url_for('records.detail', sid=item.id) }}">
+            <span class="badge-soft badge-{{ item.status|lower }}">{{ item.status }}</span>
+            <span class="flex-grow-1">
+              <span class="fw-bold d-block" style="color:var(--ink);">{{ item.problem.title }}</span>
+              <span class="tiny muted">{{ item.created_at|ago }}</span>
+            </span>
+            <span class="tiny muted">{{ item.passed }}/{{ item.total }}</span>
+          </a>
+          {% endfor %}
+          <a class="btn btn-sm btn-outline-secondary rounded-3 w-100 mt-3" href="{{ url_for('records.submissions') }}">查看全部提交记录</a>
+        {% else %}
+          <div class="empty-state py-4">
+            <span class="emoji">🐍</span>
+            还没有提交记录，先挑一道入门题试试吧。
+            <div class="mt-3"><a class="btn btn-primary btn-sm rounded-3" href="{{ url_for('problems.index', difficulty='入门') }}">去刷入门题</a></div>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="pill-note mb-3">
+          登录后即可提交代码、查看判题结果、自动统计刷题进度。
+        </div>
+        {% for problem in problems[:5] %}
+        <a class="list-tile text-decoration-none" href="{{ url_for('problems.detail', pid=problem.id) }}">
+          <span class="badge-soft badge-{{ problem.difficulty_class }}">{{ problem.difficulty }}</span>
+          <span class="fw-bold flex-grow-1" style="color:var(--ink);">{{ problem.title }}</span>
+          <span class="tiny muted">{{ problem.tag_list|join(' · ') }}</span>
+        </a>
+        {% endfor %}
+        <a class="btn btn-primary btn-sm rounded-3 w-100 mt-3" href="{{ url_for('auth.register') }}">注册后开始练习</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-md-4">
+    <a class="card-soft p-3 h-100 d-block text-decoration-none" href="{{ url_for('topics.index') }}">
+      <div class="h6 fw-bold mb-1" style="color:var(--ink);">🗂️ 专题训练</div>
+      <div class="tiny muted">8 个专题套题，按套路一组一组练，进度自动记录</div>
+      <div class="tiny fw-bold mt-2">进入专题 →</div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a class="card-soft p-3 h-100 d-block text-decoration-none" href="{{ url_for('cards.index') }}">
+      <div class="h6 fw-bold mb-1" style="color:var(--ink);">📚 Python 语法卡片</div>
+      <div class="tiny muted">21 张卡片：输入读取、排序、二分、常见易错点</div>
+      <div class="tiny fw-bold mt-2">翻卡复习 →</div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a class="card-soft p-3 h-100 d-block text-decoration-none" href="{{ url_for('report.index') if current_user.is_authenticated else url_for('auth.login') }}">
+      <div class="h6 fw-bold mb-1" style="color:var(--ink);">📈 学习报告</div>
+      <div class="tiny muted">提交分布、14 天趋势、专题完成度，可导出 Markdown / PDF</div>
+      <div class="tiny fw-bold mt-2">查看报告 →</div>
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}{{ problem.title }} · Python 算法练习场{% endblock %}
+
+{% block content %}
+<nav class="mb-3 tiny muted">
+  <a href="{{ url_for('problems.index') }}">题库</a>
+  <span class="mx-1">/</span>
+  <span>{{ problem.title }}</span>
+</nav>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <article class="problem-card">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <span class="badge-soft badge-{{ problem.difficulty_class }}">{{ problem.difficulty }}</span>
+        {% for item in problem.tag_list %}
+        <a class="badge-soft badge-tag" href="{{ url_for('problems.index', tag=item) }}">{{ item }}</a>
+        {% endfor %}
+        {% if my_status == 'AC' %}<span class="badge-soft badge-ac ms-auto">✓ 已通过</span>{% endif %}
+      </div>
+      <h1>{{ problem.title }}</h1>
+
+      <div class="problem-body">{{ problem.description|rich }}</div>
+
+      <h2 class="h6 fw-bold mt-4 mb-2">样例</h2>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="sample-box">
+            <div class="sample-head">
+              <span>输入</span>
+              <button class="btn btn-link btn-sm p-0 tiny text-decoration-none" type="button"
+                      data-copy="{{ problem.sample_input }}">复制</button>
+            </div>
+            <pre class="sample-body">{{ problem.sample_input }}</pre>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="sample-box">
+            <div class="sample-head">
+              <span>输出</span>
+              <button class="btn btn-link btn-sm p-0 tiny text-decoration-none" type="button"
+                      data-copy="{{ problem.sample_output }}">复制</button>
+            </div>
+            <pre class="sample-body">{{ problem.sample_output }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <details class="hint-panel mt-4">
+        <summary>💡 思路提示（先自己想一想，卡住了再展开）</summary>
+        <div class="hint-body">{{ problem.hint|rich }}</div>
+      </details>
+
+      <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top:1px solid var(--line);">
+        {% if prev_problem %}
+        <a class="tiny fw-bold" href="{{ url_for('problems.detail', pid=prev_problem.id) }}">← {{ prev_problem.title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_problem %}
+        <a class="tiny fw-bold ms-auto" href="{{ url_for('problems.detail', pid=next_problem.id) }}">{{ next_problem.title }} →</a>
+        {% endif %}
+      </div>
+    </article>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-soft p-4" id="submit-panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h6 fw-bold mb-0">提交代码</h2>
+        <span class="badge-soft badge-normal">Python 3</span>
+      </div>
+
+      {% if current_user.is_authenticated %}
+      <form method="post" action="{{ url_for('problems.submit', pid=problem.id) }}" id="submit-form"
+            data-problem-id="{{ problem.id }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+        <div class="editor-shell">
+          <div class="editor-bar">
+            <span>main.py</span>
+            <span id="code-count">0 字符</span>
+          </div>
+          <textarea class="code-editor" id="code" name="code" spellcheck="false"
+                    data-default="{{ default_code }}"
+                    placeholder="# 在这里写你的 Python3 代码">{{ default_code }}</textarea>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <span class="tiny muted" id="draft-hint">草稿会自动保存在本机浏览器</span>
+          <button class="btn btn-link btn-sm p-0 tiny" type="button" id="clear-draft" hidden>清空草稿</button>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <span class="tiny muted">Ctrl + Enter 快速提交</span>
+          <button class="btn btn-primary rounded-3 px-4" type="submit" id="submit-btn">提交判题</button>
+        </div>
+        <div class="tiny muted mt-2">
+          判题在同机 Python3 解释器中运行，逐个比对测试点输出；超时上限 {{ problem.time_limit_ms }} ms。
+        </div>
+      </form>
+
+      <div class="d-flex gap-2 mt-3">
+        <form method="post" action="{{ url_for('records.toggle_mistake', pid=problem.id) }}" class="flex-grow-1">
+          <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <button class="btn btn-sm w-100 rounded-3 {{ 'btn-outline-danger' if mistake else 'btn-outline-secondary' }}" type="submit">
+            {{ '移出错题本' if mistake else '加入错题本' }}
+          </button>
+        </form>
+        {% if my_status == 'AC' %}
+        <a class="btn btn-sm btn-outline-success rounded-3 flex-grow-1" href="{{ url_for('records.submissions', problem_id=problem.id) }}">我的提交</a>
+        {% endif %}
+      </div>
+
+      <details class="note-panel mt-3" {{ 'open' if study_note }}>
+        <summary>
+          📝 解题笔记
+          {% if study_note %}<span class="badge-soft badge-ac ms-1">已记录</span>{% endif %}
+        </summary>
+        <form method="post" action="{{ url_for('records.save_problem_note', pid=problem.id) }}" class="mt-2">
+          <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <textarea class="form-control" name="content" rows="4"
+                    placeholder="这题的关键思路、边界条件、用到的语法……（可留空保存以清空）">{{ study_note.content if study_note else '' }}</textarea>
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <a class="tiny fw-bold" href="{{ url_for('records.notes') }}">查看全部笔记</a>
+            <button class="btn btn-sm btn-primary rounded-3" type="submit">保存笔记</button>
+          </div>
+        </form>
+      </details>
+      {% else %}
+      <div class="empty-state py-4">
+        <span class="emoji">🔐</span>
+        登录后才能提交代码、查看判题结果。
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <a class="btn btn-primary btn-sm rounded-3" href="{{ url_for('auth.login') }}">去登录</a>
+          <a class="btn btn-outline-secondary btn-sm rounded-3" href="{{ url_for('auth.register') }}">注册账号</a>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if recent %}
+      <div class="mt-4">
+        <div class="tiny fw-bold muted mb-2">最近提交</div>
+        {% for item in recent %}
+        <a class="list-tile text-decoration-none" href="{{ url_for('records.detail', sid=item.id) }}">
+          <span class="badge-soft badge-{{ item.status|lower }}">{{ item.status }}</span>
+          <span class="tiny muted flex-grow-1">{{ item.created_at|ago }}</span>
+          <span class="tiny muted">{{ item.passed }}/{{ item.total }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.PYOJ_PROBLEM = {{ problem.id }};
+</script>
+{% endblock %}

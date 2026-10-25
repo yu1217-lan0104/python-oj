@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}专题训练 · Python 算法练习场{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+  <div>
+    <h1 class="h3 fw-bold mb-1">专题训练</h1>
+    <div class="muted tiny">
+      {{ rows|length }} 个专题 · 共 {{ total_problems }} 题次 ·
+      已完成 {{ total_solved }} / {{ total_problems }}
+    </div>
+  </div>
+  <a class="btn btn-outline-primary btn-sm rounded-3" href="{{ url_for('problems.index') }}">浏览全部题目</a>
+</div>
+
+<div class="row g-4">
+  {% for row in rows %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card-soft p-4 h-100 d-flex flex-column">
+      <div class="d-flex align-items-start justify-content-between mb-2">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size:1.6rem;line-height:1;">{{ row.topic.icon }}</span>
+          <div>
+            <a class="h6 fw-bold mb-0 d-block" style="color:var(--ink);"
+               href="{{ url_for('topics.detail', tid=row.topic.id) }}">{{ row.topic.name }}</a>
+            <span class="tiny muted">{{ row.total }} 题</span>
+          </div>
+        </div>
+        {% if row.done %}
+        <span class="badge-soft badge-ac">已完成</span>
+        {% elif row.solved %}
+        <span class="badge-soft badge-tle">进行中</span>
+        {% else %}
+        <span class="badge-soft badge-se">未开始</span>
+        {% endif %}
+      </div>
+
+      <p class="tiny muted flex-grow-1 mb-3">{{ row.topic.description }}</p>
+
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="tiny muted">进度</span>
+        <span class="tiny muted text-nowrap">{{ row.solved }} / {{ row.total }} · {{ row.percent }}%</span>
+      </div>
+      <div class="progress mb-3">
+        <div class="progress-bar" style="width: {{ row.percent }}%;"></div>
+      </div>
+
+      <div class="d-flex gap-2">
+        {% if row.next_problem and not row.done %}
+        <a class="btn btn-sm btn-primary rounded-3 flex-grow-1"
+           href="{{ url_for('problems.detail', pid=row.next_problem.id) }}">
+          {{ '继续训练' if row.solved else '开始训练' }}
+        </a>
+        {% else %}
+        <a class="btn btn-sm btn-outline-success rounded-3 flex-grow-1"
+           href="{{ url_for('topics.detail', tid=row.topic.id) }}">回看题目</a>
+        {% endif %}
+        <a class="btn btn-sm btn-outline-secondary rounded-3"
+           href="{{ url_for('topics.detail', tid=row.topic.id) }}">详情</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

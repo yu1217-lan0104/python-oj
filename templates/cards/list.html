@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}语法卡片 · Python 算法练习场{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+  <div>
+    <h1 class="h3 fw-bold mb-1">Python 语法卡片</h1>
+    <div class="muted tiny">共 {{ total }} 张 · 当前显示 {{ shown }} 张 · 卡住的时候查一张，比翻书快</div>
+  </div>
+  <form class="d-flex gap-2" method="get" action="{{ url_for('cards.index') }}">
+    {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+    <input class="form-control form-control-sm rounded-3" style="min-width:220px;" type="search"
+           name="keyword" value="{{ keyword }}" placeholder="搜索：input、排序、二分……">
+    <button class="btn btn-primary btn-sm rounded-3 px-3 text-nowrap flex-shrink-0" type="submit">搜索</button>
+  </form>
+</div>
+
+<div class="filter-bar mb-3">
+  <div class="d-flex flex-wrap align-items-center">
+    <span class="tiny fw-bold muted me-2 mb-1">分类</span>
+    <a class="chip {{ 'active' if not category }}"
+       href="{{ url_for('cards.index', keyword=keyword) }}">全部</a>
+    {% for item in categories %}
+    <a class="chip {{ 'active' if category == item }}"
+       href="{{ url_for('cards.index', category=item, keyword=keyword) }}">{{ item }}</a>
+    {% endfor %}
+  </div>
+  {% if category or keyword %}
+  <div class="mt-2"><a class="tiny fw-bold" href="{{ url_for('cards.index') }}">× 清空筛选</a></div>
+  {% endif %}
+</div>
+
+{% if not grouped %}
+<div class="card-soft">
+  <div class="empty-state">
+    <span class="emoji">🗂️</span>
+    没有匹配的卡片，换个关键词试试。
+  </div>
+</div>
+{% endif %}
+
+{% for category_name, cards in grouped.items() %}
+<div class="mb-4">
+  <div class="section-title"><span class="dot"></span>{{ category_name }}
+    <span class="tiny muted" style="font-weight:600;">{{ cards|length }} 张</span>
+  </div>
+  <div class="row g-3">
+    {% for card in cards %}
+    <div class="col-md-6">
+      <details class="card-soft p-3 h-100 card-tile">
+        <summary>
+          <span class="d-flex align-items-center gap-2">
+            <span class="card-dot"></span>
+            <span class="fw-bold" style="color:var(--ink);">{{ card.title }}</span>
+            <span class="ms-auto tiny muted">展开</span>
+          </span>
+          <span class="d-block tiny muted mt-1">{{ card.summary }}</span>
+        </summary>
+        <div class="card-body-text mt-2">{{ card.content|rich }}</div>
+        {% if card.tag_list %}
+        <div class="mt-2">
+          {% for tag in card.tag_list %}<span class="badge-soft badge-tag me-1">#{{ tag }}</span>{% endfor %}
+        </div>
+        {% endif %}
+      </details>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

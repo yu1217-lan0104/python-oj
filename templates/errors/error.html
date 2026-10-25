@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · {{ title }}{% endblock %}
+
+{% block content %}
+<div class="card-soft">
+  <div class="empty-state">
+    <span class="emoji">{{ '🔍' if code == 404 else '⚠️' }}</span>
+    <h1 class="h4 fw-bold text-dark">{{ code }} · {{ title }}</h1>
+    <p class="mb-3">{{ detail }}</p>
+    <a class="btn btn-primary btn-sm rounded-3" href="{{ url_for('main.index') }}">回到首页</a>
+    <a class="btn btn-outline-secondary btn-sm rounded-3" href="{{ url_for('problems.index') }}">去题库</a>
+  </div>
+</div>
+{% endblock %}

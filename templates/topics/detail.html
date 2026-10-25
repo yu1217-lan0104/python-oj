@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.name }} · 专题训练{% endblock %}
+
+{% block content %}
+<nav class="mb-3 tiny muted">
+  <a href="{{ url_for('topics.index') }}">专题训练</a>
+  <span class="mx-1">/</span>
+  <span>{{ topic.name }}</span>
+</nav>
+
+<div class="card-soft p-4 mb-4">
+  <div class="d-flex flex-wrap align-items-center gap-3">
+    <span style="font-size:2rem;line-height:1;">{{ topic.icon }}</span>
+    <div class="flex-grow-1">
+      <h1 class="h4 fw-bold mb-1">{{ topic.name }}</h1>
+      <div class="tiny muted">{{ topic.description }}</div>
+    </div>
+    <div class="text-end">
+      <div class="h5 fw-bold mb-1">{{ solved }} / {{ total }}</div>
+      <div class="tiny muted">已完成 {{ percent }}%</div>
+    </div>
+  </div>
+  <div class="progress mt-3">
+    <div class="progress-bar" style="width: {{ percent }}%;"></div>
+  </div>
+  <div class="d-flex flex-wrap gap-2 mt-3">
+    {% if next_problem %}
+    <a class="btn btn-primary btn-sm rounded-3" href="{{ url_for('problems.detail', pid=next_problem.id) }}">
+      {{ '继续训练：' ~ next_problem.title if solved else '开始第一题：' ~ next_problem.title }}
+    </a>
+    {% else %}
+    <a class="btn btn-outline-success btn-sm rounded-3" href="{{ url_for('problems.index') }}">这个专题已完成，去挑别的题</a>
+    {% endif %}
+    <a class="btn btn-outline-secondary btn-sm rounded-3" href="{{ url_for('topics.index') }}">返回专题列表</a>
+  </div>
+</div>
+
+<div class="card-soft overflow-hidden">
+  {% for item in items %}
+  <div class="problem-row">
+    <div class="problem-index {{ 'done' if item.state == 'AC' }}">{{ '%02d'|format(item.index) }}</div>
+    <a class="problem-link flex-grow-1 text-decoration-none" href="{{ url_for('problems.detail', pid=item.problem.id) }}">
+      <div class="problem-title">{{ item.problem.title }}</div>
+      <div class="problem-meta">
+        {% for tag in item.problem.tag_list %}<span class="badge-soft badge-tag me-1">{{ tag }}</span>{% endfor %}
+        <span class="ms-1">{{ item.problem.difficulty }}</span>
+      </div>
+    </a>
+    <div class="problem-side">
+      {% if item.state == 'AC' %}
+      <span class="badge-soft badge-ac">已通过</span>
+      {% elif item.state == 'TRIED' %}
+      <span class="badge-soft badge-tle">尝试中</span>
+      {% else %}
+      <span class="badge-soft badge-se">未开始</span>
+      {% endif %}
+      {% if item.index > 1 %}
+      <span class="tiny muted">第 {{ item.index }} 题</span>
+      {% endif %}
+      <a class="btn btn-sm btn-outline-primary rounded-3" href="{{ url_for('problems.detail', pid=item.problem.id) }}">
+        {{ '重做' if item.state == 'AC' else '去做' }}
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="pill-note mt-3">
+  建议按顺序做：同一专题的题目会把同一个套路反复练，做完再回来看这页，进度会自动更新。
+</div>
+{% endblock %}

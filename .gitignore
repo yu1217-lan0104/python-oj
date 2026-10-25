@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+pyoj.db
+.shotcache/
+docs/crop*.png

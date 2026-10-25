@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python 算法学习报告 · {{ user.display_name }}</title>
+<style>
+  :root { --ink:#101828; --muted:#6b7a90; --line:#e5eaf2; --brand:#2f6bff; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 48px;
+    background: #f4f7fc; color: var(--ink);
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; background: #fff; border: 1px solid var(--line);
+          border-radius: 16px; padding: 36px 40px; }
+  h1 { font-size: 1.7rem; margin: 0 0 6px; }
+  h2 { font-size: 1.05rem; margin: 30px 0 12px; padding-left: 10px; border-left: 4px solid var(--brand); }
+  .meta { color: var(--muted); font-size: .85rem; margin-bottom: 22px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fafcff; }
+  .card .label { color: var(--muted); font-size: .76rem; }
+  .card .value { font-size: 1.4rem; font-weight: 800; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; }
+  .charts { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: center; }
+  .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .legend-row { display: flex; align-items: center; font-size: .82rem; margin-bottom: 6px; max-width: 280px; }
+  .legend-row .count { margin-left: auto; color: var(--muted); }
+  ol { padding-left: 20px; margin: 0; }
+  ol li { margin-bottom: 8px; font-size: .9rem; }
+  .muted { color: var(--muted); }
+  .tag { display: inline-block; background: #f2f5fa; color: #475467; border-radius: 999px;
+         padding: 1px 9px; font-size: .75rem; font-weight: 700; }
+  footer { margin-top: 28px; padding-top: 14px; border-top: 1px dashed var(--line);
+           color: var(--muted); font-size: .78rem; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .wrap { border: none; border-radius: 0; padding: 0; max-width: 100%; }
+    h2 { break-after: avoid; }
+    table, .charts, .card { break-inside: avoid; }
+  }
+  @media (max-width: 720px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .charts { grid-template-columns: 1fr; }
+    .wrap { padding: 22px 18px; }
+  }
+</style>
+</head>
+<body>
+{% set stats = report.stats %}
+<div class="wrap">
+  <h1>Python 算法学习报告</h1>
+  <div class="meta">
+    账号：{{ user.display_name }}（{{ user.username }}） ·
+    生成时间：{{ report.generated_at.strftime('%Y-%m-%d %H:%M') }} ·
+    题库：{{ stats.total_problems }} 题
+  </div>
+
+  <h2>一、总体概览</h2>
+  <div class="cards">
+    <div class="card"><div class="label">已完成</div><div class="value">{{ stats.solved }} / {{ stats.total_problems }}</div></div>
+    <div class="card"><div class="label">提交次数</div><div class="value">{{ stats.total_submits }}</div></div>
+    <div class="card"><div class="label">通过率</div><div class="value">{{ stats.pass_rate }}%</div></div>
+    <div class="card"><div class="label">错题本</div><div class="value">{{ stats.mistakes }} 题</div></div>
+  </div>
+
+  <h2>二、提交结果分布</h2>
+  <div class="charts">
+    <div>{{ report.charts.donut }}</div>
+    <div>
+      {% for label, value, color in report.slices %}
+      <div class="legend-row">
+        <span class="legend-dot" style="background:{{ color }};"></span>{{ label }}
+        <span class="count">{{ value }} 次</span>
+      </div>
+      {% else %}
+      <div class="muted">还没有提交记录。</div>
+      {% endfor %}
+      <div class="muted" style="font-size:.8rem;margin-top:10px;">
+        共 {{ stats.total_submits }} 次提交，通过 {{ stats.ac_submits }} 次。
+      </div>
+    </div>
+  </div>
+
+  <h2>三、最近 14 天提交趋势</h2>
+  {{ report.charts.line }}
+
+  <h2>四、专题完成度</h2>
+  {{ report.charts.bar }}
+  <table style="margin-top:12px;">
+    <thead><tr><th>专题</th><th>完成</th><th>进度</th></tr></thead>
+    <tbody>
+      {% for item in stats.by_tag %}
+      <tr><td>{{ item.tag }}</td><td>{{ item.solved }} / {{ item.total }}</td><td>{{ item.percent }}%</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>五、错题清单</h2>
+  {% if report.mistakes %}
+  <table>
+    <thead><tr><th>题目</th><th>难度</th><th>复盘笔记</th></tr></thead>
+    <tbody>
+      {% for note in report.mistakes %}
+      <tr>
+        <td>{{ note.problem.title }}</td>
+        <td>{{ note.problem.difficulty }}</td>
+        <td class="muted">{{ (note.content[:60] ~ '…') if note.content|length > 60 else (note.content or '（未填写）') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="muted">暂无错题记录。</div>
+  {% endif %}
+
+  <h2>六、最近提交</h2>
+  {% if report.recent %}
+  <table>
+    <thead><tr><th>时间</th><th>题目</th><th>结果</th><th>测试点</th></tr></thead>
+    <tbody>
+      {% for item in report.recent %}
+      <tr>
+        <td class="muted">{{ item.created_at.strftime('%m-%d %H:%M') }}</td>
+        <td>{{ item.problem.title }}</td>
+        <td>{{ item.status }}</td>
+        <td>{{ item.passed }}/{{ item.total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="muted">暂无提交记录。</div>
+  {% endif %}
+
+  <h2>七、学习建议</h2>
+  <ol>
+    {% for tip in report.suggestions %}<li>{{ tip }}</li>{% endfor %}
+  </ol>
+
+  <footer>
+    本报告由「Python 算法练习场」自动生成，数据来自本地数据库，仅供个人学习复盘与课程材料使用。
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}学习报告 · Python 算法练习场{% endblock %}
+
+{% block content %}
+{% set stats = report.stats %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3 no-print">
+  <div>
+    <h1 class="h3 fw-bold mb-1">学习报告</h1>
+    <div class="muted tiny">生成于 {{ report.generated_at|dt }} · 数据来自你的全部提交与笔记</div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary btn-sm rounded-3" href="{{ url_for('report.export', format='md') }}">导出 Markdown</a>
+    <a class="btn btn-outline-primary btn-sm rounded-3" href="{{ url_for('report.export', format='html') }}">下载 HTML 报告</a>
+    <button class="btn btn-primary btn-sm rounded-3" type="button" id="print-report">打印 / 另存为 PDF</button>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card accent">
+      <div class="label">已完成题目</div>
+      <div class="value">{{ stats.solved }}<small> / {{ stats.total_problems }}</small></div>
+      <div class="tiny" style="color:rgba(255,255,255,.75);">完成度 {{ stats.completion }}%</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="label">提交次数</div>
+      <div class="value">{{ stats.total_submits }}</div>
+      <div class="tiny muted">通过 {{ stats.ac_submits }} 次</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="label">通过率</div>
+      <div class="value">{{ stats.pass_rate }}<small>%</small></div>
+      <div class="tiny muted">通过次数 / 提交次数</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="label">错题本</div>
+      <div class="value">{{ stats.mistakes }}<small> 题</small></div>
+      <div class="tiny muted">尝试未通过 {{ stats.unsolved_attempted }} 题</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-5">
+    <div class="card-soft p-4 h-100">
+      <div class="section-title"><span class="dot"></span>提交结果分布</div>
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+        <div style="width:200px;max-width:45%;">{{ report.charts.donut }}</div>
+        <div class="flex-grow-1">
+          {% if report.slices %}
+            {% for label, value, color in report.slices %}
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="legend-dot" style="background:{{ color }};"></span>
+              <span class="tiny fw-bold">{{ label }}</span>
+              <span class="tiny muted ms-auto">{{ value }} 次</span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="tiny muted">还没有提交记录，做完第一题这里就有数据了。</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card-soft p-4 h-100">
+      <div class="section-title"><span class="dot"></span>最近 14 天提交趋势</div>
+      {{ report.charts.line }}
+      <div class="tiny muted mt-2">横轴为日期，纵轴为当天提交次数；断档几天没关系，重新开始就好。</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-soft p-4 mb-4">
+  <div class="section-title"><span class="dot"></span>各专题完成度</div>
+  {{ report.charts.bar }}
+  <div class="table-responsive mt-3">
+    <table class="table table-clean">
+      <thead>
+        <tr><th>专题</th><th>完成</th><th>进度</th><th class="text-end">状态</th></tr>
+      </thead>
+      <tbody>
+        {% for item in stats.by_tag %}
+        <tr>
+          <td><span class="badge-soft badge-tag">{{ item.tag }}</span></td>
+          <td class="tiny muted">{{ item.solved }} / {{ item.total }}</td>
+          <td style="min-width:140px;">
+            <div class="progress" style="height:6px;">
+              <div class="progress-bar" style="width: {{ item.percent }}%;"></div>
+            </div>
+          </td>
+          <td class="text-end tiny muted">
+            {% if item.solved == 0 %}未开始{% elif item.solved == item.total %}已完成{% else %}进行中{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card-soft p-4 h-100">
+      <div class="section-title"><span class="dot"></span>错题清单</div>
+      {% if report.mistakes %}
+        {% for note in report.mistakes %}
+        <a class="list-tile text-decoration-none" href="{{ url_for('problems.detail', pid=note.problem_id) }}">
+          <span class="badge-soft badge-{{ note.problem.difficulty_class }}">{{ note.problem.difficulty }}</span>
+          <span class="flex-grow-1">
+            <span class="fw-bold d-block" style="color:var(--ink);">{{ note.problem.title }}</span>
+            <span class="tiny muted">{{ note.content[:48] ~ ('…' if note.content|length > 48 else '') if note.content else '（还没写复盘笔记）' }}</span>
+          </span>
+        </a>
+        {% endfor %}
+      {% else %}
+        <div class="tiny muted">错题本是空的。遇到 WA / TLE 时点一下「加入错题本」，这里就会留下记录。</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-soft p-4 h-100">
+      <div class="section-title"><span class="dot"></span>最近提交</div>
+      {% if report.recent %}
+      <div class="table-responsive">
+        <table class="table table-clean">
+          <tbody>
+            {% for item in report.recent %}
+            <tr>
+              <td class="tiny muted">{{ item.created_at.strftime('%m-%d %H:%M') }}</td>
+              <td><a class="fw-bold small" href="{{ url_for('records.detail', sid=item.id) }}">{{ item.problem.title }}</a></td>
+              <td><span class="badge-soft badge-{{ item.status|lower }}">{{ item.status }}</span></td>
+              <td class="tiny muted text-end">{{ item.passed }}/{{ item.total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="tiny muted">还没有提交记录。</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card-soft p-4">
+  <div class="section-title"><span class="dot"></span>学习建议</div>
+  <ol class="suggestion-list">
+    {% for tip in report.suggestions %}
+    <li>{{ tip }}</li>
+    {% endfor %}
+  </ol>
+  <div class="tiny muted mt-2">
+    建议由当前进度自动生成；导出 Markdown 后可以直接粘进课设报告或周记。
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById("print-report").addEventListener("click", function () {
+    window.print();
+  });
+</script>
+{% endblock %}

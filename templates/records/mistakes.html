@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}错题本 · Python 算法练习场{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+  <div>
+    <h1 class="h3 fw-bold mb-1">错题本</h1>
+    <div class="muted tiny">共 {{ notes|length }} 题 · 记录错因比刷更多题更重要</div>
+  </div>
+  <a class="btn btn-outline-primary btn-sm rounded-3" href="{{ url_for('problems.index') }}">去题库挑题</a>
+</div>
+
+{% if notes %}
+  {% for note in notes %}
+  {% set problem = note.problem %}
+  <article class="card-soft p-4 mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+      <span class="badge-soft badge-{{ problem.difficulty_class }}">{{ problem.difficulty }}</span>
+      <a class="fw-bold h6 mb-0" href="{{ url_for('problems.detail', pid=problem.id) }}">{{ problem.title }}</a>
+      {% for item in problem.tag_list %}<span class="badge-soft badge-tag">{{ item }}</span>{% endfor %}
+      <span class="ms-auto tiny muted">标记于 {{ note.created_at|dt }}</span>
+      {% if last_status.get(problem.id) %}
+      <span class="badge-soft badge-{{ last_status[problem.id]|lower }}">最近 {{ last_status[problem.id] }}</span>
+      {% endif %}
+    </div>
+
+    <form method="post" action="{{ url_for('records.save_note', pid=problem.id) }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+      <textarea class="form-control" name="content" rows="3"
+                placeholder="记录一下：卡在哪里？正确思路是什么？下次遇到要注意什么？">{{ note.content }}</textarea>
+      <div class="d-flex gap-2 mt-2">
+        <button class="btn btn-sm btn-primary rounded-3" type="submit">保存笔记</button>
+        <a class="btn btn-sm btn-outline-secondary rounded-3" href="{{ url_for('problems.detail', pid=problem.id) }}">重新做这题</a>
+      </div>
+    </form>
+
+    <form method="post" action="{{ url_for('records.toggle_mistake', pid=problem.id) }}" class="mt-2">
+      <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+      <input type="hidden" name="next" value="{{ url_for('records.mistakes') }}">
+      <button class="btn btn-sm btn-link text-danger p-0 tiny" type="submit">移出错题本</button>
+    </form>
+  </article>
+  {% endfor %}
+{% else %}
+<div class="card-soft">
+  <div class="empty-state">
+    <span class="emoji">📒</span>
+    错题本还是空的。做题结果页和题目页都有「加入错题本」按钮。
+    <div class="mt-3"><a class="btn btn-sm btn-primary rounded-3" href="{{ url_for('problems.index') }}">去做第一道题</a></div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
