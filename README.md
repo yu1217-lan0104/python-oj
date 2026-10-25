@@ -261,6 +261,7 @@ python-oj/
 │  ├─ export_report.py     # 生成示例学习报告
 │  ├─ seed_demo_activity.py# 给 demo 账号造演示数据（提交、错题、笔记）
 │  ├─ build_manual.js      # 生成《使用说明书》Word 文档
+│  ├─ fix_docx_styles.py   # 修正 WPS 保存后 docx 样式的元素顺序
 │  └─ make_screenshots.py  # 生成演示截图
 └─ docs/
    ├─ 使用说明书.docx / .pdf  # 用户手册（24 页，含 13 张截图）
