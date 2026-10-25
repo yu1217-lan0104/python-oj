@@ -260,8 +260,10 @@ python-oj/
 │  ├─ browser_check.py     # 无头 Chrome 验证草稿自动保存（CDP）
 │  ├─ export_report.py     # 生成示例学习报告
 │  ├─ seed_demo_activity.py# 给 demo 账号造演示数据（提交、错题、笔记）
+│  ├─ build_manual.js      # 生成《使用说明书》Word 文档
 │  └─ make_screenshots.py  # 生成演示截图
 └─ docs/
+   ├─ 使用说明书.docx / .pdf  # 用户手册（24 页，含 13 张截图）
    ├─ screenshots/         # 演示截图
    └─ exports/             # 示例学习报告（md + html）
 ```
@@ -288,6 +290,9 @@ git status             :: 工作区状态
 
 `.gitignore` 已排除 `.venv/`、`pyoj.db`、`.env`、`.shotcache/`：虚拟环境、数据库文件、数据库密码都不会进仓库，
 换一台机器按「数据库」一节重新配置即可跑起来。
+
+配套文档：[使用说明书（Word）](docs/使用说明书.docx) / [PDF 版](docs/使用说明书.pdf)，
+共 24 页，包含环境安装、功能操作、学习建议、FAQ 与题库清单，可直接打印或随课程设计提交。
 
 ---
 

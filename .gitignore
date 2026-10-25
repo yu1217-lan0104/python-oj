@@ -6,3 +6,4 @@ __pycache__/
 pyoj.db
 .shotcache/
 docs/crop*.png
+tmp*/
